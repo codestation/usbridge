@@ -1,0 +1,7 @@
+First try to make a bridge between the PSP and a network interface via USB
+
+Status:
+	psp -> bridge (works)
+	bridge -> nic (works)
+	nic -> bridge (works)
+	bridge -> usb (not working)
