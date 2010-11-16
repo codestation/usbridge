@@ -81,7 +81,7 @@ const unsigned char *Interface::getMacAddress() {
 		return NULL;
 	pAddress = pAddresses;
 	while (pAddress) {
-		//INFO("Adapter: %s\n", pAddress->AdapterName);
+		INFO("Adapter: %s\n", pAddress->AdapterName);
 		if(!strcmp(pAddress->AdapterName, realdev)) {
 			memcpy(mac, pAddress->PhysicalAddress, 6);
 			break;

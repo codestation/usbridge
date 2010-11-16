@@ -58,7 +58,7 @@ public:
 	const char *getMacAddressStr();
 	int setdirection(pcap_direction_t d = PCAP_D_IN);
 	int captureLoop(pcap_handler packet_func, u_char *data);
-	int capture(const void *packet_data, size_t size);
+	//int capture(const void *packet_data, size_t size);
 	int inject(const u_char *packet_data, size_t size);
 	int compileFilter(char *filter);
 	static List *getAdapterList();

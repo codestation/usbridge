@@ -18,34 +18,33 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "DeviceInfo.h"
+#ifndef SERVERSOCKET_H_
+#define SERVERSOCKET_H_
 
-DeviceInfo::DeviceInfo(const u_char *psp_mac, u_int id) {
-	uid = id;
-	memcpy(mac, psp_mac, 6);
-}
+#ifdef _WIN32
+#define WINVER 0x0501 //Windows XP
+#include <windows.h>
+#include <winsock2.h>
+#else
+#include <unistd.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <errno.h>
+#endif
 
-inline const u_char *DeviceInfo::getMAC() {
-	return mac;
-}
+#include <string.h>
+#include "Socket.h"
+#include "AbstractSocket.h"
 
-u_int DeviceInfo::getUID() {
-	return uid;
-}
+class ServerSocket: public AbstractSocket {
 
-char *DeviceInfo::getMACstr() {
-	sprintf(mac_str,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	return mac_str;
-}
+public:
+	ServerSocket(int port);
+	bool bindSocket(socket_type proto);
+	//bool readAvailable();
+	bool listenConnection(int max);
+	Socket *acceptConnection();
+	virtual ~ServerSocket();
+};
 
-void DeviceInfo::setMAC(const u_char *psp_mac) {
-	memcpy(mac, psp_mac, 6);
-}
-
-int DeviceInfo::compareMAC(const u_char *pmac) {
-	return memcmp(mac, pmac, 6);
-}
-
-DeviceInfo::~DeviceInfo() {
-
-}
+#endif /*SERVERSOCKET_H_*/

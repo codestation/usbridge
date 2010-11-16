@@ -18,32 +18,32 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEVICEINFO_H_
-#define DEVICEINFO_H_
+#include "StreamSocket.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+StreamSocket::StreamSocket(Socket *s) {
+	sock = s;
+	stream = NULL;
+}
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+bool StreamSocket::openStream() {
+	return (stream = fdopen(sock->getDescriptor(), "r+"));
+}
 
+char *StreamSocket::readStream(char *data, int size) {
+	return fgets(data, size, stream);
+}
 
-class DeviceInfo {
-private:
-	u_int uid;
-	u_char mac[6];
-	//temporary buffer to hold the MAC string
-	char mac_str[18];
-public:
-	DeviceInfo(const u_char *psp_mac, u_int uid);
-	const u_char *getMAC();
-	u_int getUID();
-	char *getMACstr();
-	void setMAC(const u_char *mac);
-	int compareMAC(const u_char *mac);
-	virtual ~DeviceInfo();
-};
+bool StreamSocket::writeStream(const char *data) {
+	return fputs(data, stream) >= 0;
+}
 
-#endif /*DEVICEINFO_H_*/
+void StreamSocket::closeStream() {
+	if(stream) {
+		fclose(stream);
+		stream = NULL;
+	}
+}
+
+StreamSocket::~StreamSocket() {
+	closeStream();
+}

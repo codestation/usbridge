@@ -18,28 +18,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ARGPARSER_H_
-#define ARGPARSER_H_
+#ifndef STREAMSOCKET_H_
+#define STREAMSOCKET_H_
 
-#include <ctype.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "Socket.h"
 
-class ArgParser {
-private:
-	bool list_interfaces;
-	int verbose;
-	char *interf;
-	bool empty;
+class StreamSocket {
+	Socket *sock;
+	FILE *stream;
 public:
-	ArgParser();
-	bool parse(int argc, char **argv);
-	inline bool listInterfaces() { return list_interfaces; }
-	inline int verboseMode() { return verbose; }
-	inline const char *interfaceName() { return interf; }
-	inline bool isEmpty() { return empty; }
-	virtual ~ArgParser();
+	StreamSocket(Socket *s);
+	bool openStream();
+	char *readStream(char *data, int size);
+	bool writeStream(const char *data);
+	void closeStream();
+	virtual ~StreamSocket();
 };
 
-#endif /* ARGPARSER_H_ */
+#endif /* STREAMSOCKET_H_ */

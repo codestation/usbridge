@@ -21,12 +21,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "Interface.h"
-#include "ArgParser.h"
-#include "List.h"
-#include "UsbComm.h"
-#include "DeviceBridge.h"
-#include "Logger.h"
+#include "core/Interface.h"
+#include "core/GetOpt.h"
+#include "core/List.h"
+#include "core/Logger.h"
+#include "core/UsbCommAdapter.h"
+#include "core/InterfaceAdapter.h"
 
 #define ID_VENDOR 0x054c
 #define ID_PRODUCT 0x01c9
@@ -34,33 +34,60 @@
 #define ENDPOINT_OUT 2
 #define ENDPOINT_IN 129
 
-ArgParser opts;
-DeviceBridge *bridge = NULL;
 bool end_loop = false;
 char buffer[512];
+UsbCommAdapter *usb = NULL;
+InterfaceAdapter *inter = NULL;
 
 void exit_signal(int signal) {
 	printf("Trapped CTRL+C signal, shutting down...\n");
-	if(bridge)
-		bridge->removeBridge();
+	if(usb)
+		usb->close();
+	if(inter)
+		inter->close();
 	end_loop = true;
 }
 
+void usage() {
+	INFO("bridge net-usb v0.01\n");
+	INFO("Usage: bridge-usb [-i <interface>] [-l] [-v]\n\n");
+	INFO("-i    Network device to use\n");
+	INFO("-l    List network devices and exit\n");
+	INFO("-v    Show verbose output (twice for debug output)\n");
+}
+
 int main(int argc, char **argv) {
-	INFO_ON();
-	if(!opts.parse(argc, argv)) {
-		INFO("Starting bridge net-usb v0.01\n");
-		INFO("Usage: bridge-usb [-i <interface>] [-l] [-v]\n\n");
-		INFO("-i    Network device to use\n");
-		INFO("-l    List network devices and exit\n");
-		INFO("-v    Show verbose output (twice for debug output)\n");
-		return 1;
+	char option = 0;
+	int verbose = 0;
+	bool empty = true;
+	bool list_interfaces = false;
+	const char *inter_name = NULL;
+
+	GetOpt opt(argc, argv, "i:vl");
+	while(option != '?' && (option = opt()) != EOF) {
+		switch(option) {
+		case 'v': verbose++; break;
+		case 'l': list_interfaces = true; break;
+		case 'i': inter_name = opt.arg(); break;
+		case '?':
+			INFO("\n");
+			usage();
+		default:
+			return EXIT_FAILURE;
+		}
+		empty = false;
 	}
-	if(opts.listInterfaces()) {
+	INFO_ON();
+
+	if(empty) {
+		usage();
+		return EXIT_FAILURE;
+	}
+	if(list_interfaces) {
 		List *lst = Interface::getAdapterList();
 		if(!lst) {
 			ERR("Cant get the interface list. Exiting...\n");
-			return 1;
+			return EXIT_FAILURE;
 		}
 		int i = 0;
 		INFO("Interface list:\n");
@@ -69,26 +96,22 @@ int main(int argc, char **argv) {
 			INFO("(%i) %s - %s\n", i++, inf->name, inf->desc);
 		}
 		delete lst;
-		return 2;
+		return EXIT_SUCCESS + 2;
 	}
-	if(!opts.verboseMode())
-		INFO_OFF();
-	if(opts.verboseMode() > 1)
-		DEBUG_ON();
-	INFO("bridge-usb v0.01 starting...\n");
 
-	if(!opts.interfaceName()) {
-		ERR("No interface defined, exiting...\n");
-		return 1;
-	}
-	UsbComm *usb = new UsbComm();
-	usb->init();
+	if(!verbose)
+		INFO_OFF();
+	if(verbose > 1)
+		DEBUG_ON();
+
+	INFO("bridge net-usb v0.01 starting...\n");
+
 	usb->set_endpoints(ENDPOINT_IN, ENDPOINT_OUT);
 	INFO("Installing signal handler...\n");
 	signal(SIGINT, exit_signal);
 	INFO("Trying to open USB device...\n");
 	while(!end_loop) {
-		while(!end_loop && !usb->open(ID_VENDOR, ID_PRODUCT)) {
+		while(!end_loop && !usb->UsbComm::open(ID_VENDOR, ID_PRODUCT)) {
 			sleep(1);
 		}
 		if(end_loop)
@@ -100,24 +123,20 @@ int main(int argc, char **argv) {
 			break;
 		}
 		INFO("Success\n");
-		if(!usb->claim()) {
-			bridge = new DeviceBridge();
+		if(!usb->UsbComm::claim()) {
 			INFO("Making bridge usb <==> eth\n");
-			if(!bridge->makeBridge(opts.interfaceName(), usb))
+			if(!(inter->out(usb) && usb->out(inter)))
 				ERR("Error while making bridge\n");
-			INFO("Bridge closed. Freeing resources\n");
-			delete bridge;
-			bridge = NULL;
-			usb->release();
+			INFO("Bridge closed\n");
+			usb->UsbComm::release();
 		} else {
 			ERR("Claim USB device failed\n");
 			end_loop = true;
 		}
-		INFO("Reset USB interface\n");
-		usb->reset();
-		INFO("Closing USB device\n");
-		usb->close();
+		usb->UsbComm::reset();
+		usb->UsbComm::close();
 	}
+	delete inter;
 	delete usb;
 	return 0;
 }

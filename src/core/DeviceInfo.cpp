@@ -18,19 +18,34 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LOGGER_H_
-#define LOGGER_H_
+#include "DeviceInfo.h"
 
-#include <stdio.h>
+DeviceInfo::DeviceInfo(const u_char *device_mac, u_int id) {
+	uid = id;
+	memcpy(mac, device_mac, 6);
+}
 
-extern int log_enabled;
+inline const u_char *DeviceInfo::getMAC() {
+	return mac;
+}
 
-#define DEBUG_ON() log_enabled |= 0x2;  // 00000010
-#define DEBUG_OFF() log_enabled &= 0xD; // 11111101
-#define INFO_ON() log_enabled |= 0x1;   // 00000001
-#define INFO_OFF() log_enabled &= 0xE;  // 11111110
-#define INFO(format, ...) if(log_enabled & 0x1) printf(format, ## __VA_ARGS__)
-#define DEBUG(format, ...) if(log_enabled & 0x2) printf(format, ## __VA_ARGS__)
-#define ERR(format, ...) fprintf(stderr,"%s:%i "format, __FILE__ , __LINE__ , ## __VA_ARGS__)
+u_int DeviceInfo::getUID() {
+	return uid;
+}
 
-#endif /* LOGGER_H_ */
+char *DeviceInfo::getMACstr() {
+	sprintf(mac_str,"%.2x:%.2x:%.2x:%.2x:%.2x:%.2x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	return mac_str;
+}
+
+void DeviceInfo::setMAC(const u_char *device_mac) {
+	memcpy(mac, device_mac, 6);
+}
+
+int DeviceInfo::compareMAC(const u_char *device_mac) {
+	return memcmp(mac, device_mac, 6);
+}
+
+DeviceInfo::~DeviceInfo() {
+
+}

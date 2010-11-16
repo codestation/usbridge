@@ -1,4 +1,3 @@
-
 /*
  *  Project Bahamut: full ad-hoc tunneling software to be used by the
  *  Playstation Portable (PSP) to emulate online features.
@@ -19,44 +18,21 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ArgParser.h"
+#ifndef GETOPT_H_
+#define GETOPT_H_
 
-ArgParser::ArgParser() {
-	list_interfaces = false;
-	verbose = 0;
-	interf = NULL;
-	empty = true;
-}
+#include <unistd.h>
 
-bool ArgParser::parse(int argc, char **argv) {
+class GetOpt {
+private:
 	int c;
-	opterr = 0;
-	while ((c = getopt (argc, argv, "i:vl")) != -1) {
-		switch (c) {
-		case 'v':
-			verbose++;
-			break;
-		case 'l':
-			list_interfaces = true;
-			break;
-		case 'i':
-			interf = optarg;
-			break;
-		case '?':
-			if(optopt == 'i')
-				fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-			else if (isprint(optopt))
-				fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-			else
-				fprintf (stderr, "Unknown option character `\\x%x'.\n", optopt);
-			return false;
-		default:
-			abort();
-		}
-		empty = false;
-	}
-	return !empty;
-}
+	char **v;
+	const char *o;
+public:
+	GetOpt(int argc, char **argv, const char *optstring) : c(argc), v(argv), o(optstring) {}
+	int operator()() { return getopt (c, v, o); }
+	int opt() { return optopt; }
+	const char *arg() { return optarg; }
+};
 
-ArgParser::~ArgParser() {
-}
+#endif /* GETOPT_H_ */
