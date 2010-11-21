@@ -112,7 +112,11 @@ int main(int argc, char **argv) {
 	INFO("Trying to open USB device...\n");
 	while(!end_loop) {
 		while(!end_loop && !usb->UsbComm::open(ID_VENDOR, ID_PRODUCT)) {
+#ifdef _WIN32
+			Sleep(1000);
+#else
 			sleep(1);
+#endif
 		}
 		if(end_loop)
 			break;

@@ -31,7 +31,6 @@ bool UsbComm::open(int vendor, int product) {
 	devh = libusb_open_device_with_vid_pid(ctx, vendor, product);
 	return (devh);
 }
-
 int UsbComm::bulk_read(int ep, unsigned char *data, int size, int *actual, int timeout) {
 	return bulk_transfer(LIBUSB_ENDPOINT_IN, ep, data, size, actual, timeout);
 }
@@ -85,6 +84,9 @@ void UsbComm::set_endpoints(int in, int out) {
 	ep_out = out;
 }
 
+UsbComm::~UsbComm() {
+	libusb_exit(ctx);
+}
 /*
 int UsbComm::bulk_transfer_async(usbcomm_cb cb, unsigned char *buffer, int size, libusb_endpoint_direction dir, int ep) {
 	libusb_transfer* transfer = libusb_alloc_transfer(0);
@@ -120,7 +122,3 @@ bool UsbComm::handle_async_events() {
 void UsbComm::cancel_trasfer(void *id) {
 	libusb_cancel_transfer((libusb_transfer *)id);
 }*/
-
-UsbComm::~UsbComm() {
-	libusb_exit(ctx);
-}

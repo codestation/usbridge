@@ -32,8 +32,10 @@ private:
 	//	libusb_transfer *req_transfer;
 	//};
 	//static void transfer_callback(struct libusb_transfer *transfer);
+
 	libusb_context *ctx;
 	libusb_device_handle *devh;
+
 	int ep_in;
 	int ep_out;
 

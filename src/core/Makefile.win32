@@ -1,0 +1,40 @@
+CXX := i686-pc-mingw32-g++
+AR := ar
+TARGET = bahamut-core
+LIBS := -lwpcap -lwsock32 -liphlpapi -lws2_32 -lusb-1.0
+INCLUDES := -I /usr/i686-pc-mingw32/usr/include -I /home/code/workspace/pcap/Include -I /home/code/workspace/libusb/include
+LIB_PATH := -L /home/code/workspace/pcap/Lib -L /home/code/workspace/libusb/lib/MinGW32
+CFLAGS := -O2 -pipe -Wall
+CXXFLAGS := $(CFLAGS)
+LDFLAGS := -shared -Wl,--enable-auto-import -Wl,--out-implib=lib$(TARGET).a \
+		-Wl,--export-all-symbols -Wl,--enable-auto-import -Wl,--subsystem,windows
+RM = rm -f
+OBJS =  Interface.o     \
+        Socket.o        \
+        Packet.o        \
+        EthPacket.o     \
+        DeviceInfo.o    \
+        ServerSocket.o  \
+		Adapter.o       \
+		SocketAdapter.o \
+        InterfaceInfo.o \
+        List.o          \
+        Logger.o        \
+        Thread.o        \
+		InterfaceAdapter.o \
+		UsbComm.o \
+		UsbCommAdapter.o \
+        AbstractSocket.o
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CXX) $(LDFLAGS) $(OBJS) $(LIB_PATH) $(LIBS) -o $(TARGET).dll
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(MISC_VARS) -c $*.cpp
+
+clean:
+	-$(RM) $(OBJS) $(TARGET).dll*
+
+.PHONY: all clean shared static
